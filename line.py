@@ -23,16 +23,30 @@ class BaseLine:
     start: Vector2d
     end: Vector2d
 
+    type: ClassVar[LineType]
+
+@dataclass
+class LineZoomTrigger:
+    target_zoom: float
+    frames: int
+
 @dataclass
 class StandardLine(BaseLine):
     id: int
     extension: LineExtension = LineExtension.Nothing
     inverted: bool = False
+    zoom_trigger: Optional[LineZoomTrigger] = None
+
+    type = LineType.Standard
 
 @dataclass
 class AccelerationLine(StandardLine):
     multiplier: int = 1
 
+    type = LineType.Acceleration
+
 @dataclass
 class SceneryLine(BaseLine):
     width: float = 1
+
+    type = LineType.Scenery

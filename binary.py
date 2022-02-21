@@ -12,9 +12,12 @@ class BinaryStream:
         return self.base_stream.read(length)
 
     def ReadChar(self) -> int:
+        return self.unpack('c')
+
+    def ReadInt8(self) -> int:
         return self.unpack('b')
 
-    def ReadUChar(self) -> int:
+    def ReadUInt8(self) -> int:
         return self.unpack('B')
 
     def ReadBool(self) -> bool:
@@ -59,7 +62,7 @@ class BinaryStream:
         value = 0
         shift = 0
         while more:
-            byte = self.ReadByte()
+            byte = self.ReadUInt8()
             value += (byte & 0x7f) << shift
             shift += 7
             more = (byte & 0x80) != 0
@@ -68,7 +71,7 @@ class BinaryStream:
     
     def ReadCSharpString(self) -> str:
         length = self.Read7BitEncodedInt()
-        return self.unpack(f"{length}s", length)
+        return self.unpack(f"{length}s", length).decode("utf8")
             
 
     def WriteBytes(self, value):
@@ -77,14 +80,14 @@ class BinaryStream:
     def WriteChar(self, value):
         self.pack('c', value)
 
-    def WriteUChar(self, value):
-        self.pack('C', value)
-
     def WriteBool(self, value):
         self.pack('?', value)
 
-    def WriteUInt8(self, value):
+    def WriteInt8(self, value):
         self.pack('b', value)
+    
+    def WriteUInt8(self, value):
+        self.pack('B', value)
     
     def WriteInt16(self, value):
         self.pack('h', value)
@@ -104,7 +107,7 @@ class BinaryStream:
     def WriteUInt64(self, value):
         self.pack('Q', value)
 
-    def WriteFloat(self, value):
+    def WriteSingle(self, value):
         self.pack('f', value)
 
     def WriteDouble(self, value):
@@ -125,7 +128,7 @@ class BinaryStream:
             byte = value & 0x7F
             value >>= 7
             byte |= (value != 0) << 7
-            self.WriteBytes(byte)
+            self.WriteUInt8(byte)
     
     def WriteCSharpString(self, value: str):
         length = len(value)
