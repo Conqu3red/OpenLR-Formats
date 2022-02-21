@@ -50,12 +50,12 @@ class BinaryStream:
     def ReadString(self) -> str:
         length = self.ReadUInt16()
         #print(length)
-        return self.unpack(str(length) + 's', length)
+        return self.unpack(str(length) + 's', length).decode("utf8")
 
     def ReadStringSingleByteLength(self) -> str:
-        length = int.from_bytes(self.ReadByte(), "little")
+        length = self.ReadUInt8()
         print(length)
-        return self.unpack(str(length) + 's', length)
+        return self.unpack(str(length) + 's', length).decode("utf8")
     
     def Read7BitEncodedInt(self) -> int:
         more = True

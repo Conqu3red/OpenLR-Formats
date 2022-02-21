@@ -3,8 +3,8 @@ from dataclasses import dataclass
 import io
 from typing import *
 
-from binary import BinaryStream
-from line import *
+from ..binary import BinaryStream
+from .line import *
 
 class Features:
     red_multiplier = "REDMULTIPLIER"
