@@ -114,14 +114,16 @@ class BinaryStream:
         self.pack('d', value)
 
     def WriteString(self, value):
+        # BUG: should encode, and take length of encoded
         length = len(value)
         self.WriteUInt16(length)
         self.pack(str(length) + 's', value)
 
     def WriteStringSingleByteLength(self, value):
-        length = len(value)
+        encoded = value.encode("utf-8")
+        length = len(encoded)
         self.WriteUInt8(length)
-        self.pack(str(length) + 's', value.encode("utf-8"))
+        self.pack(str(length) + 's', encoded)
 
     def Write7BitEncodedInt(self, value: int):
         while value != 0:

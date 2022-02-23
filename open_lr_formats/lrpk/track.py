@@ -122,6 +122,7 @@ class LRPK_Reader:
     def read_directories(self):
         lump_count = self.stream.ReadUInt32()
         directory_pointer = self.stream.ReadUInt32()
+        print(f"Directories at {directory_pointer}")
 
         self.HEADER_SIZE = self.stream.base_stream.tell() + 1
 
@@ -166,5 +167,76 @@ class LRPK_Writer:
     def __init__(self, buffer: io.BufferedReader, track: Track) -> None:
         self.stream = BinaryStream(buffer)
         self.track = track
+        self.directories: List[Tuple[str, int]] = []
     
-    # TODO: Writer
+    def write_versinfo(self):
+        self.directories.append(("VERSINFO", self.stream.base_stream.tell()))
+        self.stream.WriteBool(self.track.version_info.in_development)
+        self.stream.WriteUInt8(self.track.version_info.engine_version)
+        self.stream.WriteUInt8(self.track.version_info.library_version)
+        self.stream.WriteUInt8(self.track.version_info.save_revision)
+        self.stream.WriteUInt8(self.track.version_info.source_port_version)
+    
+    def write_trackdef(self):
+        self.directories.append(("TRACKDEF", self.stream.base_stream.tell()))
+        self.stream.WriteStringSingleByteLength(self.track.name)
+        self.stream.WriteStringSingleByteLength(self.track.author)
+        self.stream.WriteUInt8(self.track.grid_model)
+    
+    def write_linedef(self):
+        self.directories.append(("LINEDEF", self.stream.base_stream.tell()))
+        self.stream.WriteUInt32(len(self.track.physics_lines))
+        for line in self.track.physics_lines:
+            self.stream.WriteUInt32(line.id)
+            self.stream.WriteDouble(line.start.x)
+            self.stream.WriteDouble(line.start.y)
+            self.stream.WriteDouble(line.end.x)
+            self.stream.WriteDouble(line.end.y)
+            self.stream.WriteUInt8(line.type)
+            self.stream.WriteBool(line.flipped)
+            self.stream.WriteUInt8(line.extension)  
+    
+    def write_linedeco(self):
+        num_lines = len(self.track.scenery_lines)
+        if num_lines == 0:
+            return
+        self.directories.append(("LINEDECO", self.stream.base_stream.tell()))
+        self.stream.WriteUInt32(num_lines)
+        for line in self.track.scenery_lines:
+            self.stream.WriteUInt32(line.id)
+            self.stream.WriteSingle(line.start.x)
+            self.stream.WriteSingle(line.start.y)
+            self.stream.WriteSingle(line.end.x)
+            self.stream.WriteSingle(line.end.y)
+    
+    def write_riderdefs(self):
+        for rider in self.track.riders:
+            self.directories.append(("RIDERDEF", self.stream.base_stream.tell()))
+            self.stream.WriteDouble(rider.position.x)
+            self.stream.WriteDouble(rider.position.y)
+    
+    def write_directories(self):
+        for name, pointer in self.directories:
+            self.stream.WriteBytes(name.ljust(8).encode("ascii"))
+            self.stream.WriteUInt32(pointer)
+    
+    def write(self):
+        # Header
+        self.stream.WriteBytes(b"LRPK")
+        
+        pointer_loc = self.stream.base_stream.tell()
+        self.stream.WriteUInt32(0) # directory count
+        self.stream.WriteUInt32(0) # directory pointer
+
+        self.write_versinfo()
+        self.write_linedef()
+        self.write_linedeco()
+        self.write_riderdefs()
+        self.write_trackdef()
+
+        directory_pointer = self.stream.base_stream.tell()
+        self.write_directories()
+        
+        self.stream.base_stream.seek(pointer_loc)
+        self.stream.WriteUInt32(len(self.directories))
+        self.stream.WriteUInt32(directory_pointer)

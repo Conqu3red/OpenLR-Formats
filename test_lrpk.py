@@ -8,11 +8,11 @@ with open(file1, "rb") as f:
     t1 = LRPK_Reader(f).read()
     pretty_print(t1)
 
-""" with open(file2, "wb") as f:
-    TRK_Writer(f, t1).write()
+with open(file2, "wb") as f:
+    LRPK_Writer(f, t1).write()
 
 with open(file2, "rb") as f:
-    t2 = TRK_Reader(f).read()
+    t2 = LRPK_Reader(f).read()
     pretty_print(t2)
 
-assert t1 == t2 """
+assert t1 == t2
